@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="id">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Ucapan Ulang Tahun</title>
+    <style>
+      /* Reset + base */
+      * {
+        box-sizing: border-box;
+      }
+      html,
+      body {
+        height: 100%;
+        margin: 0;
+        font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+      }
+      body {
+        background: linear-gradient(180deg, #0f172a 0%, #0b1220 60%);
+        color: #fff;
+        overflow: hidden;
+      }
+
+      canvas#confetti {
+        position: fixed;
+        inset: 0;
+        pointer-events: none;
+        z-index: 1;
+      }
+
+      .stage {
+        position: relative;
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 40px;
+        z-index: 2;
+      }
+      .card {
+        width: min(920px, 95%);
+        background: linear-gradient(135deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0.03));
+        border-radius: 20px;
+        padding: 28px;
+        box-shadow: 0 10px 40px rgba(2, 6, 23, 0.6);
+        backdrop-filter: blur(6px);
+        display: grid;
+        grid-template-columns: 1fr 360px;
+        gap: 20px;
+        align-items: center;
+      }
+
+      .message {
+        padding: 10px;
+      }
+      .title {
+        font-size: clamp(22px, 3.2vw, 36px);
+        margin: 0 0 6px 0;
+        letter-spacing: 0.4px;
+      }
+      .subtitle {
+        opacity: 0.85;
+        margin: 0 0 18px 0;
+      }
+      .typed {
+        font-family: "Georgia", serif;
+        font-size: 18px;
+        line-height: 1.55;
+      }
+
+      .media {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        align-items: center;
+      }
+      .video-thumb {
+        width: 100%;
+        height: 200px;
+        border-radius: 12px;
+        overflow: hidden;
+        background: #000;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .video-thumb video {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      }
+
+      .controls {
+        display: flex;
+        gap: 10px;
+        margin-top: 8px;
+        flex-wrap: wrap;
+      }
+      .btn {
+        background: linear-gradient(180deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0.02));
+        border: 1px solid rgba(255, 255, 255, 0.06);
+        color: #fff;
+        padding: 8px 12px;
+        border-radius: 10px;
+        cursor: pointer;
+        font-weight: 600;
+      }
+      .btn:active {
+        transform: translateY(1px);
+      }
+
+      .footer {
+        margin-top: 12px;
+        font-size: 13px;
+        opacity: 0.7;
+      }
+
+      @media (max-width: 880px) {
+        .card {
+          grid-template-columns: 1fr;
+        }
+        .video-thumb {
+          height: 190px;
+        }
+      }
+
+      /* --- Modal Surat Estetik --- */
+      .letter-modal {
+        position: fixed;
+        inset: 0;
+        display: none;
+        justify-content: center;
+        align-items: center;
+        background: rgba(0, 0, 0, 0.7);
+        z-index: 99999;
+      }
+
+      .letter-content {
+        background: linear-gradient(135deg, #fff0f6, #ffe6f0);
+        color: #5a1a41;
+        border-radius: 20px;
+        padding: 28px;
+        width: min(380px, 90%);
+        text-align: center;
+        box-shadow: 0 0 30px rgba(255, 192, 203, 0.3);
+        animation: fadeInUp 0.8s ease;
+        position: relative;
+      }
+
+      .letter-content h2 {
+        margin-top: 0;
+        font-size: 1.5rem;
+      }
+
+      .letter-content p {
+        white-space: pre-line;
+        line-height: 1.6;
+        font-size: 1rem;
+      }
+
+      #closeLetter {
+        position: absolute;
+        right: 12px;
+        top: 8px;
+        border: none;
+        background: none;
+        font-size: 1.4rem;
+        color: #ff4f81;
+        cursor: pointer;
+      }
+
+      @keyframes fadeInUp {
+        from {
+          opacity: 0;
+          transform: translateY(40px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <canvas id="confetti"></canvas>
+
+    <div class="stage">
+      <div class="card" role="main">
+        <div class="message">
+          <h1 class="title">Selamat Ulang Tahun!</h1>
+          <p class="subtitle">Semoga sehat, bahagia, dan tercapai semua impianmu 🎉</p>
+
+          <div class="typed" id="typed">Halo... hari ini spesial. Aku ingin mengucapkan...</div>
+
+          <div class="controls">
+            <button class="btn" id="playAudio">Putar Musik</button>
+            <button class="btn" id="showVideo">Tampilkan Video</button>
+            <button class="btn" id="toggleConfetti">Matikan Confetti</button>
+          </div>
+
+          <!-- Tombol Buka Surat -->
+          <button class="btn" id="openLetter">💌 Buka Surat</button>
+
+          <div class="footer">Buat: <strong>Nama Kamu</strong> · Klik tombol untuk efek</div>
+        </div>
+
+        <div class="media">
+          <div class="video-thumb" id="videoThumb">
+            <video id="bgVideo" src="Video.mp4" muted loop playsinline></video>
+          </div>
+
+          <div style="display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; width: 100%">
+            <button class="btn" id="pauseVideo">Jeda</button>
+            <button class="btn" id="playVideo">Mainkan</button>
+            <a class="btn" id="downloadBtn" download="ucapan-ulang-tahun.html" href="#">Unduh Halaman</a>
+          </div>
+
+          <div style="font-size: 13px; opacity: 0.85; text-align: center; margin-top: 6px">Sentuhan: balon, konfeti, dan teks ketik</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal Surat -->
+    <div id="letterModal" class="letter-modal">
+      <div class="letter-content">
+        <button id="closeLetter">✕</button>
+        <h2>Untukmu 💖</h2>
+        <p>Di hari istimewa ini, aku cuma ingin bilang terima kasih sudah hadir di hidupku. Kamu hebat, kuat, dan berharga. Semoga setiap langkahmu selalu disertai tawa dan doa yang indah. Selamat ulang tahun 🎂💐</p>
+      </div>
+    </div>
+
+    <!-- Modal Video -->
+    <div id="modal" style="position: fixed; inset: 0; background: rgba(2, 6, 23, 0.8); display: none; align-items: center; justify-content: center; z-index: 9999">
+      <div style="width: min(900px, 96%); background: #061428; padding: 12px; border-radius: 12px; position: relative">
+        <button id="closeModal" style="position: absolute; right: 8px; top: 8px; padding: 6px; border-radius: 8px">✕</button>
+        <video id="modalVideo" controls style="width: 100%; height: 480px; object-fit: cover" src="Video.mp4"></video>
+      </div>
+    </div>
+
+    <!-- Audio -->
+    <audio id="bgMusic" src="Lagu.mp3" loop></audio>
+
+    <script>
+      /* ---------- Typed Text ---------- */
+      const lines = ["Halo... hari ini spesial.", "Semoga semua harapan dan cita-citamu terkabul.", "Jangan lupa tiup lilin, berdoa, dan tersenyumlah 😊"];
+      const typedEl = document.getElementById("typed");
+      let li = 0,
+        ci = 0,
+        forward = true;
+      function typeLoop() {
+        const text = lines[li];
+        typedEl.textContent = text.slice(0, ci);
+        if (forward) {
+          if (ci < text.length) ci++;
+          else {
+            forward = false;
+            setTimeout(typeLoop, 1200);
+            return;
+          }
+        } else {
+          if (ci > 0) ci--;
+          else {
+            forward = true;
+            li = (li + 1) % lines.length;
+          }
+        }
+        setTimeout(typeLoop, 60 + Math.random() * 40);
+      }
+      typeLoop();
+
+      /* ---------- Video Controls ---------- */
+      const bgVideo = document.getElementById("bgVideo");
+      document.getElementById("pauseVideo").addEventListener("click", () => bgVideo.pause());
+      document.getElementById("playVideo").addEventListener("click", () => bgVideo.play());
+
+      const modal = document.getElementById("modal");
+      document.getElementById("showVideo").addEventListener("click", () => {
+        modal.style.display = "flex";
+        document.getElementById("modalVideo").play();
+      });
+      document.getElementById("closeModal").addEventListener("click", () => {
+        modal.style.display = "none";
+        document.getElementById("modalVideo").pause();
+      });
+
+      /* ---------- Music ---------- */
+      const music = document.getElementById("bgMusic");
+      document.getElementById("playAudio").addEventListener("click", () => {
+        if (music.paused) {
+          music.play();
+          document.getElementById("playAudio").textContent = "Jeda Musik";
+        } else {
+          music.pause();
+          document.getElementById("playAudio").textContent = "Putar Musik";
+        }
+      });
+
+      /* ---------- Modal Surat ---------- */
+      const openLetter = document.getElementById("openLetter");
+      const closeLetter = document.getElementById("closeLetter");
+      const letterModal = document.getElementById("letterModal");
+
+      openLetter.addEventListener("click", () => {
+        letterModal.style.display = "flex";
+        music.volume = 0.25;
+      });
+
+      closeLetter.addEventListener("click", () => {
+        letterModal.style.display = "none";
+        music.volume = 0.6;
+      });
+    </script>
+  </body>
+</html>
